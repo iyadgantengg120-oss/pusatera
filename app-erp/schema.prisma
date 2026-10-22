@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id       String @id @default(cuid())
+  email    String @unique
+  nama     String
+  password String
+  role     String @default("ADMIN")
+}
+
+model Product {
+  id           String   @id @default(cuid())
+  kode         String   @unique
+  nama         String
+  barcode      String?
+  kategori     String
+  satuan       String
+  harga_beli   Float
+  harga_jual   Float
+  stok_minimum Int      @default(0)
+  createdAt    DateTime @default(now())
+  stocks       Stock[]
+  cards        StockCard[]
+}
+
+model Warehouse {
+  id     String @id @default(cuid())
+  nama   String
+  alamat String?
+  stocks Stock[]
+  cards  StockCard[]
+}
+
+model Stock {
+  id          String    @id @default(cuid())
+  productId   String
+  warehouseId String
+  qty         Float     @default(0)
+  nilai       Float     @default(0)
+  product     Product   @relation(fields: [productId], references: [id])
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+
+  @@unique([productId, warehouseId])
+}
+
+model StockCard {
+  id          String    @id @default(cuid())
+  productId   String
+  warehouseId String
+  tipe        String
+  qty         Float
+  keterangan  String?
+  createdAt   DateTime  @default(now())
+  product     Product   @relation(fields: [productId], references: [id])
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+}
+
+model PurchaseOrder {
+  id        String   @id @default(cuid())
+  nomor     String   @unique
+  supplier  String
+  total     Float
+  status    String   @default("DITERIMA")
+  tanggal   DateTime @default(now())
+}
+
+model SalesOrder {
+  id        String   @id @default(cuid())
+  nomor     String   @unique
+  customer  String?
+  total     Float
+  metode    String   @default("TUNAI")
+  tanggal   DateTime @default(now())
+}
+
+model Employee {
+  id          String       @id @default(cuid())
+  nama        String
+  jabatan     String
+  departemen  String
+  status      String       @default("AKTIF")
+  telepon     String?
+  gaji        Float        @default(0)
+  attendances Attendance[]
+  payrolls    Payroll[]
+}
+
+model Attendance {
+  id         String   @id @default(cuid())
+  employeeId String
+  tanggal    DateTime @default(now())
+  status     String   @default("HADIR")
+  employee   Employee @relation(fields: [employeeId], references: [id])
+}
+
+model Payroll {
+  id         String   @id @default(cuid())
+  employeeId String
+  periode    String
+  jumlah     Float
+  tanggal    DateTime @default(now())
+  employee   Employee @relation(fields: [employeeId], references: [id])
+}
+
+model COA {
+  id      String          @id @default(cuid())
+  kode    String          @unique
+  nama    String
+  tipe    String
+  details JournalDetail[]
+}
+
+model Journal {
+  id         String          @id @default(cuid())
+  tanggal    DateTime        @default(now())
+  keterangan String
+  ref        String?
+  details    JournalDetail[]
+}
+
+model JournalDetail {
+  id        String  @id @default(cuid())
+  journalId String
+  coaId     String
+  debit     Float   @default(0)
+  kredit    Float   @default(0)
+  journal   Journal @relation(fields: [journalId], references: [id])
+  coa       COA     @relation(fields: [coaId], references: [id])
+}
